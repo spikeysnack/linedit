@@ -1,0 +1,300 @@
+#!/bin/bash
+
+TABS=4
+
+## check_for_colors
+#  @param (none)
+#
+#  @output
+#         string number of colors
+#
+check_for_colors()
+{
+    # see if it supports colors...
+    ncolors=$(tput colors)
+    echo "${ncolors}"
+}
+
+## init_colors
+#  set color vars
+#  @param (none)
+#
+# @output
+#         (none)
+#
+# @requires
+#         check_for_colors
+#
+init_colors()
+{
+
+    if [ $(check_for_colors) -gt 4 ]
+    then	
+	# text attributes
+	normal="$(tput sgr0)"
+	bold="$(tput bold)"
+	underline="$(tput smul)"
+	nounderline="$(tput rmul)"
+	standout="$(tput smso)"
+	nostandout="$(tput rmso)"
+	reverse="$(tput rev)"
+
+	# text fg colors
+	black="$(tput setaf 0)"
+	red="$(tput setaf 1)"
+	green="$(tput setaf 2)"
+	yellow="$(tput setaf 3)"
+	blue="$(tput setaf 4)"
+	magenta="$(tput setaf 5)"
+	cyan="$(tput setaf 6)"
+	white="$(tput setaf 7)"
+
+	# text bg colors
+	bgred="$(tput setab 1)"
+	bggreen="$(tput setab 2)"
+	bgyellow="$(tput setab 3)"
+	bgblue="$(tput setab 4)"
+	bgmagenta="$(tput setab 5)"
+	bgcyan="$(tput setab 6)"
+	bgwhite="$(tput setab 7)"
+	bgblack="$(tput setab 0)"
+
+	COLORS=1
+    fi
+}
+
+
+
+##  color_lines
+#
+#  print line with colors and symbols
+#
+#  @param  (string) input string   
+#          
+#  @output 
+#         (string) colored string
+#
+#  @requires
+#           init_colors
+#
+
+color_line()
+{
+    set -f
+
+    local line="${1}"
+    #    local lastchr
+
+    [[ ! $COLORS ]] && init_colors
+
+    fslash='/'
+    bslash='\'
+    dqt=\"
+    sqt=\'
+    tab=$(printf "\t")
+    colorspace=${colorspace:-"${red}·"}
+    astericks='*'
+
+    if [ $TABS -eq 8 ] ; then
+	dblarrow="»       "
+    else
+	dblarrow="»   "
+    fi
+
+    BSLASH=
+    FSLASH=
+    QUOTED=
+    BRACKETED=
+    SPACE="0"
+#    colorspace="${red}·"
+
+    for (( i=0; i<${#line}; i++ )); do 
+	j=$((i+1))
+	c="${line:$i:1}"
+	cnxt="${line:$j:1}"
+
+	if [ "$c" == " " ] ; then
+	    printf "%s%s" "${colorspace}" "${normal}"
+	    continue
+
+	elif [ "$c" == "[" ] ; then
+	    BRACKETED=1
+	    printf "%s%c" "${bold}${yellow}" "${c}" 
+	    continue
+
+	elif [ "$c" == "]" ] ; then
+	    unset BRACKETED
+	    printf "%s%c" "${bold}${yellow}" "${c}"
+	    printf "$normal"
+	    continue
+
+	elif [ "$c" == $tab ] ; then
+	    printf "%s" "${bold}${red}"
+	    printf "%s" "$dblarrow"
+	    printf "%s" ${normal}
+	    continue
+
+	elif [ "$c" == $bslash ] ; then
+	    printf "%s%c" "${bold}${magenta}" "${c}"
+
+	    if [[ $BSLASH ]] ; then 
+		unset BSLASH
+		printf "${normal}"
+	    else
+		BSLASH=1
+	    fi
+
+	    continue
+
+
+	elif [ "$c" == "/" ] ; then
+	    printf "%s%c%s" "${red}" "${c}" "${normal}" 
+	    FSLASH=1
+	    continue
+	    
+	elif [ "$c" == $sqt ] ; then
+
+	    printf "%s%c" "${bold}${blue}" "${c}"
+
+	    if [[ $SQT ]] ; then 
+		unset SQT
+		unset BSLASH
+		printf "${normal}"
+	    else
+		SQT=1
+	    fi
+
+	    continue
+
+	elif [ "$c" == $dqt ] ; then
+	    
+	    printf "%s%c" "${bold}${green}" "${c}"
+	    
+	    if [[ $QUOTED ]] ; then
+		unset QUOTED
+		unset BSLASH 
+		printf "${normal}"
+	    else
+		QUOTED=1
+	    fi
+	    
+	    continue
+
+	fi
+	[[ $QUOTED    ]] && printf "%s" "${green}"	
+	[[ $SQT ]] && printf "${bold}${blue}" 
+	[[ $BRACKETED ]] && printf "%s" "${bold}${cyan}"
+	[[ $BSLASH    ]] && printf "%s" "${magenta}" && unset BSLASH
+
+	printf "%c" $c
+
+	printf "%s" $normal
+    done
+
+    # print blue dollar sign for EOL
+    printf "%s%s%s" "${blue}" "$" "${normal}"
+
+    printf "\n\n"
+
+    set +o noglob
+} # color_line
+
+
+# take input from pipe
+from_pipe()
+{    
+    OLDIFS=$IFS
+    IFS=$(printf "\n")
+
+    while read line ; do
+
+	cline="$(color_line "${line}" )"
+	
+	echo "${cline}"
+    done 
+IFS=$OLDIFS
+}
+
+
+# take input from file
+from_file()
+{    
+
+OLDIFS=$IFS
+IFS=$(printf "\n")
+
+
+while read -r -e line 
+do	
+    cline="$(color_line "${line}" )"
+    
+    echo "${cline}"
+    
+done < "${1}"
+
+IFS=$OLDIFS
+}
+
+
+# take input from pipe
+from_string()
+{    
+    OLDIFS=$IFS
+    IFS=$(printf "\n")
+
+    while read line ; do
+
+	cline="$(color_line "${line}" )"
+	
+	echo "${cline}"
+    done <<< "${@}"
+
+#    IFS=$OLDIFS
+}
+
+
+print_help()
+{
+    help=$(cat <<EOF
+${bold}${white}colorline  ${blue}<file> ${normal}
+${bold}${white}cat ${blue}<file>${bold}${yellow} | ${white}colorline ${red}  # pipe ${normal} 
+${bold}${white}colorline ${bold}${yellow} < ${blue}<file> ${red}     # redirection ${normal} 
+${bold}${white}colorline  -ns ${blue}<file>  ${red}  # space not shown ${normal}
+EOF
+)
+    echo "${help}"
+}
+
+
+main()
+{
+    init_colors
+    
+    if [ "$1" == "-h"   ] ; then
+	print_help
+     	exit 0
+    fi
+
+    if [ "$1" == "-ns"   ] ; then
+	colorspace=" "
+	shift
+    fi
+
+    if [ $# -ge 1 -a -f "$1" ] ; then
+	from_file "${1}"
+
+    elif [ $# -ge 1 -a ! -f "$1" ] ; then
+
+	from_string "${@}"
+    else
+	from_pipe
+    fi
+}
+
+
+main "${@}"
+
+
+
+# END
+

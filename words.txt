@@ -1,0 +1,7 @@
+FIRST LINE   THAT \t has issu es.
+ a new line that has an editing bug that I have fixed 
+another line, \n\t probably the third. 
+	"some'	funky \" ass \""'\" stuff \n\r\t\c
+       so FROM ex
+do do
+dgooo

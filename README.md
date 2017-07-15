@@ -1,15 +1,14 @@
-linedit -- a one line editor
-============================
+# linedit -- a one line editor
 
-1.2 12 Jul 2017 beta 
-Free for all non-commercial purposes.
-Copyright 2017 Chris Reid <http://spikeysnack@gmail.com>
 
-Usage: 
-------
-      linedit <filename> <line#>
+#### 1.2 12 Jul 2017 beta 
+#### Free for all non-commercial purposes.
+#### Copyright 2017 Chris Reid <http://spikeysnack@gmail.com>
+
+### Usage: 
+
+    linedit <filename> <line#>
          
-
              information options:
 
             -c   print line in diagnostic mode
@@ -29,15 +28,21 @@ Usage:
                  `linedit myfile.txt 15`
 
 
-Instructions 
-------------
+### Instructions 
 
-`linedit		<filename>		<line#> 
-linedit -c 	<filename>		<line#>
-linedit		<filename>
-linedit -a 	<filename>
-linedit -p 	<filename>
-linedit -h`
+<pre>
+    linedit		<filename>		<line#>
+    
+    linedit -c 	<filename>		<line#>
+    
+    linedit		<filename>
+    
+    linedit -a 	<filename>
+    
+    linedit -p 	<filename>
+
+    linedit -h
+</pre>
 
 Type the filename and line number to edit.
 
@@ -64,16 +69,14 @@ If <line#> is 0 the line will be prepended.
 If <line#> is <total+1> the edited line will be appended.
 
 
-Files
------
+#### Files
 
     /usr/local/bin/linedit
     /usr/local/bin/colorline
    
 
 
-License
--------
+### License
 
     linedit -- a one line editor
     

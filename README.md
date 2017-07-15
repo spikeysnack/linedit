@@ -30,8 +30,7 @@
 
 ### Instructions 
 
-<pre>
-```    linedit		\<filename\>		<line#>
+    linedit		<filename>		<line#>
     
     linedit -c 	<filename>		<line#>
     
@@ -42,7 +41,6 @@
     linedit -p 	<filename>
 
     linedit -h ```
-</pre>
 
 Type the filename and line number to edit.
 

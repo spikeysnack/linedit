@@ -73,6 +73,13 @@ If <line#> is <total+1> the edited line will be appended.
     /usr/local/bin/colorline
    
 
+### Install
+	test:  make test
+	install make install
+	    If the user has a local bin directory,
+	    the files are placed there. Otherwise
+	    they are put in /usr/local/bin.
+			
 
 ### License
 
@@ -82,7 +89,7 @@ If <line#> is <total+1> the edited line will be appended.
     
     License: Free for all non-commercial purposes.
     
-    License URL: https://creativecommons.org/licenses/by-sa/3.0/
+    License URL: <https://creativecommons.org/licenses/by-sa/3.0/>
     
     Modification: allowed but original attribution must be included.
     

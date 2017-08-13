@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+EDITOR="linedit"
+
+
+
+if  test -t 2 ; then 
+    echo "stdout is a tty"
+else
+    exit 0
+fi
+
+
+read -r -a line  < 2
+
+echo "line: $line "
+
+
+
+
+
+

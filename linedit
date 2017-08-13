@@ -644,7 +644,10 @@ done
 
 # parse args after options
 if [ ${#@} -eq 0 ] ; then
+
    printf "\nUsage:  ${white}${FILE} ${bold}${blue}<filename>${normal} ${bold}${green}<line>${normal}\n"
+
+   printf   "        ${white}${FILE} ${bold}${green} -h${normal}\n"
    exit 1
 fi
 

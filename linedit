@@ -609,11 +609,14 @@ search()
     echo "edit which line?"
         
     
-    select REPLY in ${lnums[@]} 
+    select L in ${lnums[@]} ;
     do
-	EDITLINE=$(echo -e "${REPLY}")
-	  
+	EDITLINE=$(echo -e "${L}") 
+
+	[[ ! $EDITLINE ]] && EDITLINE=$(is_integer "${REPLY}")
+
 	break
+		
     done
     
 }

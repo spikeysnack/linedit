@@ -1,7 +1,7 @@
 # linedit -- a one line editor
 
 
-#### 1.2 12 Jul 2017 beta 
+#### 1.2 12 Dec 2017 beta 
 #### Free for all non-commercial purposes.
 #### Copyright 2017 Chris Reid <http://spikeysnack@gmail.com>
 
@@ -16,6 +16,7 @@
             -i   show instructions
             -l   show licensing info
             -q   do not show results
+			-s term  search foro term in file
             -v   show version
     
             editing options:

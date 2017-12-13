@@ -6,6 +6,8 @@
 # Chris Reid <spikeysnack@gmail.com>
 
 # GLOBALS ########################################################
+OLDIFS=$IFS
+#LC_NUMERIC="en_US.UTF-8"
 
 # File Info
 TITLE="linedit -- a one line editor"
@@ -25,6 +27,8 @@ SAVE_EXT="le" # save edits file extension
 
 ## set ups ##
 tabs -${TABS}  # set the tabs
+
+
 numcolors=$(tput colors)
 ## Requirements
 requires="ex wc sed grep" # requirements
@@ -100,8 +104,13 @@ unset _norm
 #
 is_integer()
 {
-    [[ ${1} == ?(-)+([0-9]) ]] && echo "${1}"
+
+    if [[ ${1} =~ [0-9]+ ]] ; then
+	echo "${1}"
+    fi
+    
 }
+
 
 
 
@@ -294,6 +303,7 @@ ${bold}${white}${FILE} -c ${t}${bold}${blue}<filename>${normal}${tt}${bold}${gre
 ${bold}${white}${FILE}${tt}${bold}${blue}<filename>${normal}
 ${bold}${white}${FILE} -a ${t}${bold}${blue}<filename>${normal}
 ${bold}${white}${FILE} -p ${t}${bold}${blue}<filename>${normal}
+${bold}${white}${FILE} -s ${t}${bold}${yellow}<word>${normal}
 ${bold}${white}${FILE} -h${normal}
 EOF
 )
@@ -363,6 +373,7 @@ Usage:  ${white}${FILE} ${bold}${blue}<filename>${normal} ${bold}${green}<line#>
         -i   show instructions
         -l   show licensing info
         -q   do not show results
+        -s <word>   search for words in a file  
         -v   show version
 
         ${bgblue}editing options:${normal}
@@ -552,11 +563,70 @@ color_line()
 } # color_line
 
 
+search()
+{
+    declare -a lines
+    declare -a lnums
+
+    EDITLINE=
+    T="${1}"
+    F="${2}"
+
+    mapfile -t lines <<< $(grep  --color=none -n "${T}" "${F}")
+    mapfile -t colorlines <<< $(grep  --color=always -n "${T}" "${F}")
+   
+    length=${#lines[*]}
+    # >&2 echo "lines: ${length}"
+    
+    if [ ${length} -gt 0 ] ; then
+	
+	for (( i=0; i != length; i++))
+	do
+	    num=$(echo "${lines[i]}" | cut -f1 -d: )
+	    
+	    lnums[i]="${num}"
+	done
+	
+	printf "%s" "${bold}${blue}"
+	printf "%s\n" "${F}"	
+	printf "%s" "${normal}${bold}" 
+	
+	for ((i=0; i != length; i++))
+	do
+	    echo -e "${colorlines[i]}\n"
+	done
+	
+	printf "%s\n" "${normal}"
+	
+    fi
+
+    
+    # for n in ${lnums[*]}
+    # do
+    # 	>&2 echo "${n}"
+    # done
+    
+    echo "edit which line?"
+        
+    
+    select REPLY in ${lnums[@]} 
+    do
+	EDITLINE=$(echo -e "${REPLY}")
+	  
+	break
+    done
+    
+}
+
+
+
+
 ###########################################################
 # start script here
-
+main()
+{
 # colors
-init_colors
+[[ ! $COLORS ]] && init_colors
 
 # requirements
 check_requirements "${requires}" 
@@ -570,6 +640,8 @@ CREATE=
 COLORLINE=
 PREPEND=
 QUIET=
+SEARCH=
+searchterm=
 SHOW_HELP=
 SHOW_INSTRUCTIONS=
 SHOW_LICENSE=
@@ -580,7 +652,7 @@ SHOW_VERSION=
 # get command line options with dashes
 # set flag vars for output (cmdline args)
 
-while getopts "achilpqv" OPTION
+while getopts "achilpqs:v" OPTION
 do
     case $OPTION in
 
@@ -617,6 +689,12 @@ do
 	    shift
 	    ;;
 
+	s) 
+	    searchterm="${OPTARG}"
+	    SEARCH=1
+	    shift 1
+	    ;;
+
 	v)
 	    SHOW_VERSION=1
 	    shift
@@ -635,7 +713,24 @@ done
 #eval set -- "$TEMP"
 # not used
 
+
 # options
+echo "${normal}"
+if [[ ${SEARCH} ]] ; then
+    fname="${2}"
+    search "${searchterm}" "${fname}"  
+
+    if [[ ${EDITLINE} ]] ; then 
+
+	>&2 echo "1:$1  2:$2 : 3:$3 4:$4" 
+
+	set $EDITLINE ${2} 
+
+	>&2 echo "1:${1}  2:${2}" 
+    fi
+fi
+
+
 [[ ${SHOW_HELP} ]]         && usage 1           && exit 0
 [[ ${SHOW_INSTRUCTIONS} ]] && show_instructions && exit 0
 [[ ${SHOW_LICENSE} ]]      && show_license      && exit 0
@@ -655,7 +750,8 @@ fi
 
 # flip $2 and $1 if $1 is integer
 # "linedit 3 file" 
-if [[ $(is_integer ${1}) ]] ; then
+
+if [[ $(is_integer "${1}") ]] ; then
     
     if [[ ! "${2}" ]] ; then
 	>&2 printf "%s%s%s\n" "${bold}${red}" "File will be named \"${1}\"." "${normal}"
@@ -670,7 +766,7 @@ if [[ $(is_integer ${1}) ]] ; then
 	    exit 1
 	fi
     else
-	set -- "${2}" "${1}"   # switch positional args 1 & 2
+	set -- ${2} ${1}   # switch positional args 1 & 2
     fi
 fi
 
@@ -698,6 +794,9 @@ if [ ! -f "${file}" ] ; then
     exit 2
 fi
 
+
+
+
 # clear screen
 [[ $CLEARSCREEN ]] && tput clear
 
@@ -713,7 +812,8 @@ if [[ $PREPEND ]] ; then
 elif [[ $APPEND ]] ; then
     let "line_num = file_numlines + 1" 
 else  
-    line_num="${2}"
+
+    let "line_num = $2 + 0"
 
     if [ -z "${line_num}" ] ; then
 	>&2 printf "%sno line number given%s\n" "${red}" "${normal}"
@@ -724,7 +824,7 @@ else
     fi
     
     # check for int
-    good_int=$(is_integer "${line_num}")
+    good_int=$(is_integer "${line_num}" )
 
     # not an int
     if  [ ! ${good_int}  ] ; then
@@ -732,10 +832,10 @@ else
 	exit 1
     else
 	# we have a line number
-	line_num=$((line_num))
+#	line_num=$((line_num + 0))
 
 	# 0 is prepend
-	if [ $((line_num)) -eq 0 ] ; then
+	if [ $((line_num)) -eq  0  ] ; then
 	    PREPEND=1	
 	fi
 	# append mode
@@ -912,6 +1012,10 @@ else # delete mode
     fi
 
 fi # new_line
+} # main
+
+
+main "$@"
 
 # final exit
 printf "%s\n" "${normal}"

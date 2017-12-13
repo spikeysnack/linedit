@@ -22,12 +22,18 @@ test:	linedit
 install:	linedit
 	install  -m 755 linedit $(prefix)/bin
 	install  -m 755 colorline $(prefix)/bin
-
+	@linedit -h
 
 
 uninstall:	
 	rm -f $(prefix)/bin/linedit
 	rm -f $(prefix)/bin/colorline
+	@echo "linedit uninstalled"
+
+
+update:	uninstall install
+	@echo "linedit updated"
+	@linedit -v
 
 dist:	clean
 	rm -f *.tgz 
@@ -38,5 +44,5 @@ dist:	clean
 clean:
 	rm -f *~ *.le 
 
-.PHONY:	help test install uninstall dist clean
+.PHONY:	help test install uninstall update dist clean
 

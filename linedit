@@ -606,19 +606,30 @@ search()
     # 	>&2 echo "${n}"
     # done
     
-    echo "edit which line?"
+    # SENTINEL
+
+    n="${#lnums[@]}"
+
+    echo "array size:  ${n}"   
+
+    if [ $((n)) -gt 1 ] ; then
+    
+	echo "edit which line?"
         
     
-    select L in ${lnums[@]} ;
-    do
-	EDITLINE=$(echo -e "${L}") 
+	select L in ${lnums[@]} ;
+	do
+	    EDITLINE=$(echo -e "${L}") 
+	    
+	    [[ ! $EDITLINE ]] && EDITLINE=$(is_integer "${REPLY}")
+	    
+	    break	    
+	done
 
-	[[ ! $EDITLINE ]] && EDITLINE=$(is_integer "${REPLY}")
-
-	break
-		
-    done
-    
+    else
+	EDITLINE=${lnums[0]}
+	
+    fi
 }
 
 
